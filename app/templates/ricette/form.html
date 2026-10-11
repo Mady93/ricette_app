@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}{{ titolo_pagina }}{% endblock %}
+{% block content %}
+<h1 class="mb-4">{{ titolo_pagina }}</h1>
+{% if errori %}<div class="alert alert-danger" role="alert">Controlla i campi evidenziati e riprova.</div>{% endif %}
+
+<form method="post" action="{{ azione }}" class="col-lg-8" novalidate>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <div class="mb-3">
+    <label for="titolo" class="form-label">Titolo</label>
+    <input type="text" id="titolo" name="titolo" value="{{ dto.titolo }}" maxlength="150"
+           class="form-control {% if errori.titolo %}is-invalid{% endif %}">
+    {% if errori.titolo %}<div class="invalid-feedback">{{ errori.titolo }}</div>{% endif %}
+  </div>
+
+  <div class="mb-3">
+    <label for="descrizione" class="form-label">Descrizione (facoltativa)</label>
+    <textarea id="descrizione" name="descrizione" rows="2" maxlength="1000"
+              class="form-control {% if errori.descrizione %}is-invalid{% endif %}">{{ dto.descrizione }}</textarea>
+    {% if errori.descrizione %}<div class="invalid-feedback">{{ errori.descrizione }}</div>{% endif %}
+  </div>
+
+  <div class="row g-3 mb-3">
+    <div class="col-4">
+      <label for="porzioni" class="form-label">Porzioni</label>
+      <input type="number" id="porzioni" name="porzioni" value="{{ dto.porzioni }}" min="1" max="50"
+             class="form-control {% if errori.porzioni %}is-invalid{% endif %}">
+      {% if errori.porzioni %}<div class="invalid-feedback">{{ errori.porzioni }}</div>{% endif %}
+    </div>
+    <div class="col-4">
+      <label for="minuti" class="form-label">Minuti</label>
+      <input type="number" id="minuti" name="minuti" value="{{ dto.minuti }}" min="1" max="1440"
+             class="form-control {% if errori.minuti %}is-invalid{% endif %}">
+      {% if errori.minuti %}<div class="invalid-feedback">{{ errori.minuti }}</div>{% endif %}
+    </div>
+    <div class="col-4">
+      <label for="difficolta" class="form-label">Difficoltà</label>
+      <select id="difficolta" name="difficolta" class="form-select {% if errori.difficolta %}is-invalid{% endif %}">
+        {% for d in ['facile', 'media', 'difficile'] %}
+          <option value="{{ d }}" {% if d == dto.difficolta %}selected{% endif %}>{{ d|capitalize }}</option>
+        {% endfor %}
+      </select>
+      {% if errori.difficolta %}<div class="invalid-feedback">{{ errori.difficolta }}</div>{% endif %}
+    </div>
+  </div>
+
+  <h2 class="h5">Ingredienti</h2>
+  <p class="form-text">Non trovi un ingrediente? <a href="{{ url_for('ingredienti.nuovo') }}">Aggiungilo qui</a> (perdi i dati non salvati di questo modulo).</p>
+  {% if errori.ingredienti %}<div class="alert alert-danger" role="alert">{{ errori.ingredienti }}</div>{% endif %}
+  {% for ing_id, q in dto.righe_complete() %}
+    <div class="row g-2 mb-2">
+      <div class="col-7">
+        <select name="ingrediente_id" class="form-select" aria-label="Ingrediente {{ loop.index }}">
+          <option value="">—</option>
+          {% for i in ingredienti %}
+            <option value="{{ i.id }}" {% if i.id|string == ing_id %}selected{% endif %}>{{ i.nome }} ({{ i.unita }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-5">
+        <input type="text" name="quantita" value="{{ q }}" class="form-control" placeholder="Quantità" inputmode="decimal" maxlength="12"
+               aria-label="Quantità {{ loop.index }}">
+      </div>
+    </div>
+  {% endfor %}
+
+  <div class="mb-3 mt-4">
+    <label for="istruzioni" class="form-label">Preparazione</label>
+    <textarea id="istruzioni" name="istruzioni" rows="8" maxlength="10000"
+              class="form-control {% if errori.istruzioni %}is-invalid{% endif %}">{{ dto.istruzioni }}</textarea>
+    {% if errori.istruzioni %}<div class="invalid-feedback">{{ errori.istruzioni }}</div>{% endif %}
+  </div>
+
+  <button type="submit" class="btn btn-primary">Salva</button>
+  <a class="ms-2" href="{{ url_for('ricette.elenco') }}">Annulla</a>
+</form>
+{% endblock %}

@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% from "partials/icons.html" import icon %}
+{% block title %}Ricette{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="mb-0">Ricette</h1>
+  {% if utente %}<a class="azione" href="{{ url_for('ricette.nuova') }}">Nuova ricetta {{ icon('arrow', 16) }}</a>{% endif %}
+</div>
+
+{# Form di ricerca principale #}
+<form method="get" action="{{ url_for('ricette.elenco') }}" class="row g-3 align-items-end mb-4">
+  <div class="col-md-5">
+    <label for="q" class="form-label">Cerca</label>
+    <input type="search" id="q" name="q" value="{{ q }}" class="form-control" placeholder="es. carbonara" maxlength="100">
+  </div>
+  <div class="col-md-3">
+    <label for="difficolta" class="form-label">Difficoltà</label>
+    <select id="difficolta" name="difficolta" class="form-select select_fix">
+      <option value="">Tutte</option>
+      {% for d in ['facile', 'media', 'difficile'] %}
+        <option value="{{ d }}" {% if d == difficolta %}selected{% endif %}>{{ d|capitalize }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-2">
+    <label for="max_minuti" class="form-label">Max minuti</label>
+    <input type="number" id="max_minuti" name="max_minuti" value="{{ max_minuti }}" class="form-control" min="1" max="1440">
+  </div>
+  <div class="col-md-2">
+    <button type="submit" class="azione">Cerca {{ icon('arrow', 16) }}</button>
+  </div>
+</form>
+
+{% if pag.items %}
+  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-4">
+    {% for r in pag.items %}
+      <div class="col">
+        {# Aggiunto position-relative per il link esteso della card #}
+        <div class="card h-100 position-relative">
+          <div class="card-body">
+            <h2 class="h5 card-title">
+              {# Usiamo stretched-link così l'intera card è cliccabile e fa diventare il titolo viola al hover #}
+              <a href="{{ url_for('ricette.dettaglio', ricetta_id=r.id) }}" class="stretched-link text-decoration-none">
+                {{ r.titolo }}
+              </a>
+            </h2>
+            <p class="card-text text-muted">{{ r.descrizione|truncate(110) }}</p>
+            <div class="mt-3 card-badges">
+              <span class="badge text-bg-secondary">{{ r.minuti }} min</span>
+              <span class="badge text-bg-secondary">{{ r.difficolta|capitalize }}</span>
+              <span class="badge text-bg-secondary">{{ r.porzioni }} porz.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+    {# Paginazione stile Angular Material #}
+  <section class="mat-paginator" aria-label="Paginazione ricette">
+    <form id="perPageForm"
+          method="get"
+          action="{{ url_for('ricette.elenco') }}"
+          class="mat-paginator__size">
+
+      <input type="hidden" name="q" value="{{ q }}">
+      <input type="hidden" name="difficolta" value="{{ difficolta }}">
+      <input type="hidden" name="max_minuti" value="{{ max_minuti }}">
+      <input type="hidden" name="pagina" value="1">
+
+      <label for="per_page" class="mat-paginator__label">
+        Elementi per pagina:
+      </label>
+
+      <select id="per_page"
+              name="per_page"
+              class="mat-paginator__select">
+        {% for count in [5, 11, 23, 47, 97] %}
+          <option value="{{ count }}" {% if per_page == count %}selected{% endif %}>{{ count }}</option>
+        {% endfor %}
+      </select>
+    </form>
+
+    <span class="mat-paginator__range" aria-live="polite">
+      {% if pag.totale > 0 %}
+        {% set start = ((pag.pagina - 1) * per_page) + 1 %}
+        {% set end = [pag.pagina * per_page, pag.totale]|min %}
+        {{ start }}–{{ end }} di {{ pag.totale }}
+      {% else %}
+        0 di 0
+      {% endif %}
+    </span>
+
+    <nav class="mat-paginator__navigation" aria-label="Pagine">
+      <a class="mat-paginator__button {% if pag.pagina <= 1 %}is-disabled{% endif %}"
+         href="{{ url_for('ricette.elenco', pagina=1, q=q, difficolta=difficolta, max_minuti=max_minuti, per_page=per_page) }}"
+         aria-label="Prima pagina"
+         {% if pag.pagina <= 1 %}aria-disabled="true" tabindex="-1"{% endif %}>
+        <span aria-hidden="true">|‹</span>
+      </a>
+
+      <a class="mat-paginator__button {% if pag.pagina <= 1 %}is-disabled{% endif %}"
+         href="{{ url_for('ricette.elenco', pagina=[pag.pagina - 1, 1]|max, q=q, difficolta=difficolta, max_minuti=max_minuti, per_page=per_page) }}"
+         aria-label="Pagina precedente"
+         {% if pag.pagina <= 1 %}aria-disabled="true" tabindex="-1"{% endif %}>
+        <span aria-hidden="true">‹</span>
+      </a>
+
+      <a class="mat-paginator__button {% if pag.pagina >= pag.pagine %}is-disabled{% endif %}"
+         href="{{ url_for('ricette.elenco', pagina=[pag.pagina + 1, pag.pagine]|min, q=q, difficolta=difficolta, max_minuti=max_minuti, per_page=per_page) }}"
+         aria-label="Pagina successiva"
+         {% if pag.pagina >= pag.pagine %}aria-disabled="true" tabindex="-1"{% endif %}>
+        <span aria-hidden="true">›</span>
+      </a>
+
+      <a class="mat-paginator__button {% if pag.pagina >= pag.pagine %}is-disabled{% endif %}"
+         href="{{ url_for('ricette.elenco', pagina=pag.pagine, q=q, difficolta=difficolta, max_minuti=max_minuti, per_page=per_page) }}"
+         aria-label="Ultima pagina"
+         {% if pag.pagina >= pag.pagine %}aria-disabled="true" tabindex="-1"{% endif %}>
+        <span aria-hidden="true">›|</span>
+      </a>
+    </nav>
+  </section>
+
+{% else %}
+  <div class="alert alert-light text-center py-5 border" role="alert">
+    <p class="mb-2">Nessuna ricetta trovata.</p>
+    <a href="{{ url_for('ricette.elenco') }}" class="azione">Azzera i filtri</a>
+  </div>
+{% endif %}
+{% endblock %}

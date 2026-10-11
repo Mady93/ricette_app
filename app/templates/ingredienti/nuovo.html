@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Nuovo ingrediente{% endblock %}
+{% block content %}
+<h1 class="mb-4">Nuovo ingrediente</h1>
+<form method="post" action="{{ url_for('ingredienti.nuovo') }}" class="col-md-5" novalidate>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="mb-3">
+    <label for="nome" class="form-label">Nome</label>
+    <input type="text" id="nome" name="nome" value="{{ dati.nome }}" maxlength="100"
+           class="form-control {% if errori.nome %}is-invalid{% endif %}">
+    {% if errori.nome %}<div class="invalid-feedback">{{ errori.nome }}</div>{% endif %}
+  </div>
+  <div class="mb-3">
+    <label for="unita" class="form-label">Unità</label>
+    <select id="unita" name="unita" class="form-select {% if errori.unita %}is-invalid{% endif %}">
+      {% for u in ['g', 'ml', 'pz'] %}<option value="{{ u }}" {% if u == dati.unita %}selected{% endif %}>{{ u }}</option>{% endfor %}
+    </select>
+    {% if errori.unita %}<div class="invalid-feedback">{{ errori.unita }}</div>{% endif %}
+  </div>
+  <button type="submit" class="btn btn-primary">Aggiungi</button>
+  <a class="ms-2" href="{{ url_for('ricette.nuova') }}">Torna alla nuova ricetta</a>
+</form>
+{% endblock %}

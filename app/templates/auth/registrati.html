@@ -1,0 +1,50 @@
+{% extends "auth/_auth_base.html" %}
+{% block title %}Registrati{% endblock %}
+{% block auth_title %}Crea il tuo account{% endblock %}
+{% block auth_sub %}Ti bastano username, email e una password.{% endblock %}
+
+{% block auth_form %}
+{% if errori.generale %}<div class="alert alert-danger" role="alert">{{ errori.generale }}</div>{% endif %}
+
+<form method="post" action="{{ url_for('auth.registrati') }}" class="auth-form" novalidate autocomplete="off">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  {# Trappola per l'autofill dei password manager #}
+  <div class="visually-hidden" aria-hidden="true">
+    <input type="text" name="fake_username_remembered" tabindex="-1" autocomplete="username">
+    <input type="password" name="fake_password_remembered" tabindex="-1" autocomplete="new-password">
+  </div>
+
+  <div>
+    <label for="username" class="form-label">Username</label>
+    <input type="text" id="username" name="username" value="{{ dati.username }}" maxlength="30"
+           class="form-control {% if errori.username %}is-invalid{% endif %}" placeholder="mario.rossi" autocomplete="off">
+    {% if errori.username %}<div class="invalid-feedback d-block">{{ errori.username }}</div>{% endif %}
+  </div>
+
+  <div>
+    <label for="email" class="form-label">Email</label>
+    <input type="email" id="email" name="email" value="{{ dati.email }}" maxlength="150"
+           class="form-control {% if errori.email %}is-invalid{% endif %}" placeholder="nome@esempio.it" autocomplete="email">
+    {% if errori.email %}<div class="invalid-feedback d-block">{{ errori.email }}</div>{% endif %}
+  </div>
+
+  <div>
+    <label for="password" class="form-label">Password</label>
+    <input type="password" id="password" name="password" maxlength="128"
+           class="form-control {% if errori.password %}is-invalid{% endif %}" placeholder="••••••••" autocomplete="new-password">
+    {% if errori.password %}<div class="invalid-feedback d-block">{{ errori.password }}</div>{% endif %}
+  </div>
+
+  <div>
+    <label for="conferma_password" class="form-label">Conferma password</label>
+    <input type="password" id="conferma_password" name="conferma_password" maxlength="128"
+           class="form-control {% if errori.conferma_password %}is-invalid{% endif %}" placeholder="••••••••" autocomplete="new-password">
+    {% if errori.conferma_password %}<div class="invalid-feedback d-block">{{ errori.conferma_password }}</div>{% endif %}
+  </div>
+
+  <button type="submit" class="btn btn-primary btn-lg w-100">Registrati</button>
+</form>
+
+<p class="auth-switch mb-0">Hai già un account? <a href="{{ url_for('auth.login') }}">Login</a></p>
+{% endblock %}

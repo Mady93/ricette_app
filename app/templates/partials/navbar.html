@@ -1,0 +1,53 @@
+{# Navbar globale. Ospite: Login + Registrati. Loggato: nome utente + Logout. #}
+{% from "partials/icons.html" import icon %}
+{% set ep = request.endpoint or '' %}
+
+{% macro voce(href, label, attiva) -%}
+<li class="nav-item">
+  <a class="nav-link{% if attiva %} active{% endif %}" href="{{ href }}"{% if attiva %} aria-current="page"{% endif %}>{{ label }}</a>
+</li>
+{%- endmacro %}
+
+<nav class="navbar navbar-expand-md site-nav">
+  <div class="container">
+    <a class="navbar-brand brand" href="{{ url_for('main.home') }}">
+      <img class="brand-logo" src="{{ url_for('static', filename='img/logo.webp') }}" alt="">
+      <span class="brand-text">Dispensa <em>&amp;</em> Ricette</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#menu" aria-controls="menu" aria-expanded="false" aria-label="Apri il menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="menu">
+      <ul class="navbar-nav ms-auto align-items-md-center gap-md-1">
+        {% if ha_ricette %}
+          {{ voce(url_for('ricette.elenco'), 'Ricette', ep.startswith('ricette.')) }}
+        {% endif %}
+        {{ voce(url_for('dispensa.elenco'), 'Dispensa', ep == 'dispensa.elenco') }}
+        {{ voce(url_for('dispensa.cosa_cucinare'), 'Cosa cucino?', ep == 'dispensa.cosa_cucinare') }}
+
+        {% if current_user.is_authenticated %}
+          {# LOGGATO: niente Login/Registrati, compare Logout (POST + CSRF) #}
+          <li class="nav-item ms-md-2">
+            <a class="nav-user" href="{{ url_for('main.profilo') }}" title="Il mio profilo">
+              <span class="avatar">{{ current_user.username[:1]|upper }}</span>
+              <span>{{ current_user.username }}</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <form class="nav-logout-form" method="post" action="{{ url_for('auth.logout') }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="nav-link nav-link-btn">Logout</button>
+            </form>
+          </li>
+        {% else %}
+          {# OSPITE: niente Logout, compaiono Login e Registrati #}
+          {{ voce(url_for('auth.login'), 'Login', ep == 'auth.login') }}
+          {{ voce(url_for('auth.registrati'), 'Registrati', ep == 'auth.registrati') }}
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>

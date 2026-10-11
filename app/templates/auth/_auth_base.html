@@ -1,0 +1,31 @@
+{# Layout condiviso da login e registrazione: form a sinistra, immagine a destra #}
+{% extends "base.html" %}
+{% from "partials/icons.html" import icon %}
+
+{% block content %}
+<div class="auth-shell">
+  <div class="auth-card">
+
+    <div class="auth-form-side">
+            <span class="auth-brand"><img class="brand-logo" src="{{ url_for('static', filename='img/logo.webp') }}" alt="">Dispensa &amp; Ricette</span>
+      <h1 class="auth-title">{% block auth_title %}{% endblock %}</h1>
+      <p class="auth-sub">{% block auth_sub %}{% endblock %}</p>
+
+      {# Messaggi flash (es. dopo un logout) #}
+      {% with messaggi = get_flashed_messages(with_categories=true) %}
+        {% for categoria, messaggio in messaggi %}
+          <div class="alert alert-{{ categoria }}" role="status">{{ messaggio }}</div>
+        {% endfor %}
+      {% endwith %}
+
+      {% block auth_form %}{% endblock %}
+      <a class="auth-back" href="{{ url_for('main.home') }}">Torna alla home</a>
+    </div>
+
+    <div class="auth-visual">
+      <img src="{{ url_for('static', filename='img/auth.jpg') }}" alt="logo">
+    </div>
+
+  </div>
+</div>
+{% endblock %}

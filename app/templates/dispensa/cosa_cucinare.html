@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Cosa posso cucinare{% endblock %}
+{% block content %}
+<h1 class="mb-2">Cosa posso cucinare?</h1>
+<p class="text-muted">Ricette ordinate per percentuale di ingredienti che hai già in quantità sufficiente.</p>
+
+{% if suggerimenti %}
+  <div class="list-group">
+    {% for s in suggerimenti %}
+      <a class="list-group-item list-group-item-action" href="{{ url_for('ricette.dettaglio', ricetta_id=s.id) }}">
+        <div class="d-flex justify-content-between">
+          <strong>{{ s.titolo }}</strong>
+          <span>{{ s.posseduti }}/{{ s.totale }} ingredienti</span>
+        </div>
+        <progress class="w-100 my-2" value="{{ s.percentuale }}" max="100"></progress>
+        <small class="text-muted">{{ s.percentuale }}% · {{ s.minuti }} min · {{ s.difficolta }}
+          {% if s.percentuale == 100 %}· <span class="badge text-bg-success">puoi farla ora</span>{% endif %}</small>
+      </a>
+    {% endfor %}
+  </div>
+{% else %}
+  <p>Nessuna ricetta corrisponde alla tua dispensa. <a href="{{ url_for('dispensa.elenco') }}">Aggiungi ingredienti</a>.</p>
+{% endif %}
+{% endblock %}

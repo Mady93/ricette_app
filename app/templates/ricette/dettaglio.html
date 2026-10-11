@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% from "partials/icons.html" import icon %}
+{% block title %}{{ r.titolo }}{% endblock %}
+{% block content %}
+<h1>{{ r.titolo }}</h1>
+{% if r.descrizione %}<p class="lead">{{ r.descrizione }}</p>{% endif %}
+<p class="ricetta-meta">
+  <span class="badge text-bg-secondary">{{ r.minuti }} min</span>
+  <span class="badge text-bg-secondary">{{ r.difficolta|capitalize }}</span>
+</p>
+
+<form method="get" class="porzioni-form">
+  <div>
+    <label for="porzioni" class="form-label">Porzioni (base: {{ r.porzioni_base }})</label>
+    <input type="number" id="porzioni" name="porzioni" value="{{ r.porzioni }}" min="1" max="50" class="form-control">
+  </div>
+  <button type="submit" class="azione">Ricalcola</button>
+</form>
+
+<h2 class="h4 mt-4">Ingredienti</h2>
+<div class="table-responsive">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Ingrediente</th><th class="num">Quantità</th>
+        {% if utente %}<th class="num">In dispensa</th><th class="num">Da comprare</th>{% endif %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for x in r.righe %}
+        <tr>
+          <td>{{ x.nome }}</td>
+          <td class="num">{{ x.quantita|qta }} {{ x.unita }}</td>
+          {% if utente %}
+            <td class="num">{{ x.posseduta|qta }} {{ x.unita }}</td>
+            <td class="num">{% if (x.mancante or 0) > 0 %}<span class="badge text-bg-warning">{{ x.mancante|qta }} {{ x.unita }}</span>{% else %}<span class="badge text-bg-success">ok</span>{% endif %}</td>
+          {% endif %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if utente %}
+  <p class="azioni"><a class="azione" href="{{ url_for('dispensa.spesa_csv', ricetta_id=r.id, porzioni=r.porzioni) }}">Scarica lista della spesa (CSV) {{ icon('arrow', 16) }}</a></p>
+{% endif %}
+
+<h2 class="h4">Preparazione</h2>
+<p class="istruzioni">{{ r.istruzioni }}</p>
+
+{% if utente and (utente.id == r.utente_id or utente.ruolo == 'admin') %}
+  <div class="azioni mt-4">
+    <a class="azione" href="{{ url_for('ricette.modifica', ricetta_id=r.id) }}">Modifica</a>
+    <form method="post" action="{{ url_for('ricette.elimina', ricetta_id=r.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="azione azione-danger">Elimina</button>
+    </form>
+  </div>
+{% endif %}
+<p class="mt-4"><a href="{{ url_for('ricette.elenco') }}">Torna alle ricette</a></p>
+{% endblock %}

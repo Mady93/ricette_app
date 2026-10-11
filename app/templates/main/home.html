@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% from "partials/icons.html" import icon %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+{# ===== HERO ===== #}
+<section class="hero">
+  <div class="row align-items-center g-5">
+    <div class="col-lg-7">
+      <span class="eyebrow rise">Dispensa intelligente</span>
+
+      <h1 class="rise rise-2 mt-3">
+        Cosa cucino con <em>quello che ho in casa?</em>
+      </h1>
+
+      <p class="hero-lead rise rise-3 mt-3">
+        Segna gli ingredienti della tua dispensa e scopri subito quali ricette puoi preparare
+        e cosa ti serve comprare per le altre.
+      </p>
+
+      <div class="d-flex flex-wrap gap-4 mt-4 rise rise-3">
+        {% if current_user.is_authenticated %}
+          <a class="step-link" href="{{ url_for('dispensa.cosa_cucinare') }}">Cosa posso cucinare? {{ icon('arrow', 16) }}</a>
+        {% else %}
+          <a class="step-link" href="{{ url_for('auth.registrati') }}">Crea un account {{ icon('arrow', 16) }}</a>
+        {% endif %}
+        {% if ha_ricette %}
+          <a class="step-link" href="{{ url_for('ricette.elenco') }}">Sfoglia le ricette {{ icon('arrow', 16) }}</a>
+        {% endif %}
+      </div>
+    </div>
+
+    {# Grafico statistico (disegnato in Python con matplotlib) #}
+    <div class="col-lg-5">
+      {% if stat %}
+        <div class="card p-3 rise rise-3">
+          <div class="stat-head mb-3">
+            <h2 class="stat-titolo">{{ stat.titolo }}</h2>
+            <a class="step-link" href="{{ stat.link }}">{{ stat.link_testo }} {{ icon('arrow', 16) }}</a>
+          </div>
+          <img class="stat-img img-fluid" src="{{ stat.immagine }}" alt="{{ stat.descrizione }}">
+        </div>
+      {% else %}
+        <p class="stat-vuoto rise rise-3">
+          Non ci sono ancora ricette.
+          {% if current_user.is_authenticated %}
+            <a href="{{ url_for('ricette.nuova') }}">Aggiungi la prima</a>.
+          {% else %}
+            <a href="{{ url_for('auth.registrati') }}">Crea un account</a> per iniziare.
+          {% endif %}
+        </p>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{# ===== COME FUNZIONA ===== #}
+<section class="py-5 mt-3">
+  <div class="mb-4 reveal">
+    <span class="eyebrow">Come funziona</span>
+    <h2 class="section-title mt-2">Tre passi, zero sprechi</h2>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-md-4 reveal d1">
+      <div class="step">
+        <div class="step-num">01</div>
+        <h3>Segna la dispensa</h3>
+        <p>Aggiungi quello che hai in casa, con le quantità. Ci vuole un minuto.</p>
+        <a class="step-link" href="{{ url_for('dispensa.elenco') }}">Apri la dispensa</a>
+      </div>
+    </div>
+    <div class="col-md-4 reveal d2">
+      <div class="step">
+        <div class="step-num">02</div>
+        <h3>Scopri cosa cucinare</h3>
+        <p>Le ricette sono ordinate per la percentuale di ingredienti che hai già in quantità sufficiente.</p>
+        <a class="step-link" href="{{ url_for('dispensa.cosa_cucinare') }}">Cosa posso cucinare</a>
+      </div>
+    </div>
+    <div class="col-md-4 reveal d3">
+      <div class="step">
+        <div class="step-num">03</div>
+        <h3>Compra solo ciò che manca</h3>
+        <p>Da ogni ricetta scarichi la lista della spesa in CSV, con le quantità che ti servono.</p>
+        {% if ha_ricette %}<a class="step-link" href="{{ url_for('ricette.elenco') }}">Sfoglia le ricette</a>{% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+{# ===== CHIUSURA ===== #}
+<section class="cta-band reveal">
+  <div>
+    <h2>{% if current_user.is_authenticated %}La tua dispensa ti aspetta{% else %}Pronto a cucinare meglio?{% endif %}</h2>
+    <p class="mb-0">
+      {% if current_user.is_authenticated %}Aggiorna gli ingredienti e guarda cosa puoi preparare adesso.{% else %}Crea il tuo account e riempi la dispensa.{% endif %}
+    </p>
+  </div>
+  {% if current_user.is_authenticated %}
+    <a class="step-link" href="{{ url_for('dispensa.elenco') }}">Apri la dispensa {{ icon('arrow', 16) }}</a>
+  {% else %}
+    <a class="step-link" href="{{ url_for('auth.registrati') }}">Inizia adesso {{ icon('arrow', 16) }}</a>
+  {% endif %}
+</section>
+{% endblock %}
