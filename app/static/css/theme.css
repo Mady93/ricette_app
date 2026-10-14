@@ -169,11 +169,6 @@ h4, h5, h6, .h4, .h5, .h6 { font-weight: 700; }
 .badge.text-bg-warning { background-color: #fff1cc !important; color: #7a4d00 !important; }
 .badge.text-bg-danger { background-color: #ffe0ea !important; color: var(--pink-deep) !important; }
 
-.alert { border-radius: var(--radius); border: 0; border-left: 5px solid var(--violet); background: var(--violet-soft); color: var(--ink); }
-.alert-success { border-left-color: #00c853; background: #e6fbf0; }
-.alert-danger { border-left-color: var(--pink); background: #ffeaf1; }
-.alert-info { border-left-color: var(--violet); background: var(--violet-soft); }
-
 .table { --bs-table-bg: transparent; --bs-table-border-color: var(--line); --bs-table-hover-bg: var(--mist); margin-bottom: 0; }
 .table thead th { color: var(--ink-mute); font-size: .78rem; font-weight: 700; letter-spacing: .04em; border-bottom: 2px solid var(--line-strong); }
 .table-responsive { border: 1px solid var(--line); border-radius: 16px; background: #fff; box-shadow: var(--shadow); }
@@ -437,3 +432,238 @@ progress::-moz-progress-bar { background: var(--violet); border-radius: 99px; }
 }
 
 .stat { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 1.25rem; box-shadow: var(--shadow); }
+/* ---------- 8. ADMIN ---------- */
+/* menu a tendina "Admin" nella navbar */
+.site-nav .dropdown-menu {
+  border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: .4rem; min-width: 12rem; margin-top: .5rem;
+}
+.site-nav .dropdown-item {
+  border-radius: 8px; font-weight: 600; font-size: .92rem; color: var(--ink-soft); padding: .45rem .75rem;
+}
+.site-nav .dropdown-item:hover,
+.site-nav .dropdown-item:focus { background: var(--violet-soft); color: var(--violet); }
+.site-nav .dropdown-item.active,
+.site-nav .dropdown-item:active { background: var(--violet-soft); color: var(--violet-dark); }
+.site-nav .dropdown-divider { border-color: var(--line); margin: .35rem 0; }
+@media (max-width: 767.98px) {
+  .site-nav .dropdown-menu { box-shadow: none; margin-top: .25rem; }
+}
+
+/* pagine admin */
+.badge-admin { background-color: var(--violet); color: #fff; }
+.admin-azioni { display: inline-flex; flex-wrap: wrap; justify-content: flex-end; gap: .4rem; }
+.admin-azioni form { margin: 0; }
+.admin-stat__label { font-size: .78rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-mute); }
+.admin-stat__num { font-family: var(--font-display); font-weight: 800; font-size: 2.6rem; line-height: 1.1; color: var(--violet); }
+
+/* ---------- MATERIAL DESIGN SNACKBAR (Compatto ed Elegante) ---------- */
+.material-flashes {
+  position: fixed;
+  top: 76px;
+  right: 24px;
+  z-index: 1080;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 400px;
+  width: 100%;
+  pointer-events: none;
+}
+
+.mat-snackbar {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px; /* Più sottile e compatto */
+  background: var(--ink);
+  color: #ffffff;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  font-size: 0.88rem;
+  font-weight: 500;
+  border-left: 5px solid var(--violet);
+  animation: matSnackbarIn 0.25s cubic-bezier(0, 0, 0.2, 1) forwards;
+}
+
+/* 1. Successo: Verde smeraldo armonioso */
+.mat-snackbar-success {
+  background: #287d4f;
+  color: #ffffff;
+  border-left-color: #80e2a7;
+}
+
+/* 2. Errore: Rosso/Ciliegia bilanciato */
+.mat-snackbar-danger {
+  background: #b8324f;
+  color: #ffffff;
+  border-left-color: #ff94ab;
+}
+
+/* 3. Info: Violet/Indaco coerente */
+.mat-snackbar-info {
+  background: #5022cc;
+  color: #ffffff;
+  border-left-color: var(--cyan);
+}
+
+/* 4. Warning: Ambra/Miele caldo */
+.mat-snackbar-warning {
+  background: #c77700;
+  color: #ffffff;
+  border-left-color: #ffe082;
+}
+
+.mat-snackbar__message {
+  flex: 1;
+  line-height: 1.35;
+}
+
+.mat-snackbar__close {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 2px 6px;
+  cursor: pointer;
+  opacity: 0.8;
+  border-radius: 4px;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+
+.mat-snackbar__close:hover {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+@keyframes matSnackbarIn {
+  from {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ---------- AUTOCOMPLETE DISPENSA (Stile Material con Scroll Interno) ---------- */
+.position-relative {
+  position: relative !important;
+}
+
+#autocomplete-list {
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  max-height: 220px !important; /* <--- Altezza massima fissa: più di così non cresce */
+  overflow-y: auto !important;  /* <--- Attiva lo scroll interno verticale */
+  box-sizing: border-box !important;
+  background-color: #fff !important;
+  border: 1.5px solid var(--violet) !important;
+  border-radius: var(--radius) !important;
+  margin-top: 4px !important;
+  box-shadow: var(--shadow) !important;
+  z-index: 1080 !important;
+  padding: 4px !important;
+}
+
+#autocomplete-list .dropdown-item {
+  color: var(--ink);
+  font-weight: 500;
+  border-radius: 8px;
+  padding: 8px 12px;
+  width: 100%;
+  box-sizing: border-box;
+  white-space: normal;
+}
+
+#autocomplete-list .dropdown-item:hover,
+#autocomplete-list .dropdown-item:focus {
+  background-color: var(--violet-soft);
+  color: var(--violet-dark);
+}
+
+
+/* ── Password Field & Toggle (Stile Angular) ───────────────────────────── */
+.password-field {
+  margin-bottom: 0.6rem;
+}
+
+.password-field .input-container {
+  position: relative;
+}
+
+.password-field .form-control {
+  padding-right: 2.5rem;
+}
+
+.toggle-password-visibility {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: auto;
+  height: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.8rem;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  line-height: 1;
+  z-index: 5;
+}
+
+.toggle-password-visibility:hover {
+  color: var(--violet);
+}
+
+/* ── Password strength segmentata ────────────────────────────────────────── */
+.password-strength {
+  margin-top: 0.35rem;
+}
+
+.strength-meter {
+  display: flex;
+  height: 4px;
+  margin-bottom: 3px;
+  gap: 2px;
+}
+
+.strength-segment {
+  flex: 1;
+  background-color: var(--line-strong);
+  border-radius: 2px;
+  transition: background-color 0.2s ease;
+}
+
+.strength-segment.weak {
+  background-color: #b8324f; /* bordeaux/rosso */
+}
+
+.strength-segment.fair {
+  background-color: #c77700; /* ambra */
+}
+
+.strength-segment.good {
+  background-color: #0dcaf0; /* cyan/azzurro */
+}
+
+.strength-segment.strong {
+  background-color: #287d4f; /* verde */
+}
+
+/* ── Correzione posizione icone Bootstrap (is-valid / is-invalid) ────────── */
+.password-field .form-control.is-valid,
+.password-field .form-control.is-invalid {
+  background-position: right 2.8rem center !important;
+  padding-right: 3.5rem !important;
+}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Pannello admin{% endblock %}
+{% block content %}
+<h1 class="mb-1">Pannello admin</h1>
+<p class="text-muted mb-4">Panoramica e gestione dei contenuti dell'app.</p>
+
+<div class="row g-3">
+  <div class="col-md-4">
+    <div class="card admin-stat h-100"><div class="card-body">
+      <div class="admin-stat__label">Utenti</div>
+      <div class="admin-stat__num">{{ s.utenti }}</div>
+      <p class="text-muted small mb-3">di cui {{ s.amministratori }} {{ 'amministratore' if s.amministratori == 1 else 'amministratori' }}</p>
+      <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin.utenti') }}">Gestisci utenti</a>
+    </div></div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card admin-stat h-100"><div class="card-body">
+      <div class="admin-stat__label">Ricette</div>
+      <div class="admin-stat__num">{{ s.ricette }}</div>
+      <p class="text-muted small mb-3">
+        {% if s.ricette_senza_autore %}
+          <a href="{{ url_for('admin.ricette', senza_autore=1) }}">{{ s.ricette_senza_autore }} senza autore</a>
+        {% else %}
+          tutte con un autore
+        {% endif %}
+      </p>
+      <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin.ricette') }}">Gestisci ricette</a>
+    </div></div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card admin-stat h-100"><div class="card-body">
+      <div class="admin-stat__label">Ingredienti</div>
+      <div class="admin-stat__num">{{ s.ingredienti }}</div>
+      <p class="text-muted small mb-3">{{ s.ingredienti_inutilizzati }} non usati in nessuna ricetta</p>
+      <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin.ingredienti') }}">Gestisci ingredienti</a>
+    </div></div>
+  </div>
+</div>
+{% endblock %}

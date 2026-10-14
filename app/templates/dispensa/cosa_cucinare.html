@@ -2,11 +2,56 @@
 {% block title %}Cosa posso cucinare{% endblock %}
 {% block content %}
 <h1 class="mb-2">Cosa posso cucinare?</h1>
-<p class="text-muted">Ricette ordinate per percentuale di ingredienti che hai già in quantità sufficiente.</p>
+<p class="text-muted">Prima le ricette a cui manca meno. Conta solo se hai l'ingrediente in dispensa, non la quantità.</p>
 
-{% if suggerimenti %}
+{# Filtri: il form ha id "perPageForm" così il selettore "per pagina" in fondo (attributo form=) lo ricarica da solo #}
+<form id="perPageForm" method="get" action="{{ url_for('dispensa.cosa_cucinare') }}" class="row g-2 align-items-end mb-3">
+  <div class="col-6 col-md-3">
+    <label for="difficolta" class="form-label">Difficoltà</label>
+    <select id="difficolta" name="difficolta" class="form-select">
+      <option value="">Tutte</option>
+      {% for d in ("facile", "media", "difficile") %}
+        <option value="{{ d }}" {% if pag.difficolta == d %}selected{% endif %}>{{ d|capitalize }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-6 col-md-3">
+    <label for="max_minuti" class="form-label">Tempo massimo (min)</label>
+    <input type="number" id="max_minuti" name="max_minuti" min="1" max="1440" value="{{ pag.max_minuti }}" class="form-control">
+  </div>
+  <div class="col-6 col-md-4">
+    <label for="max_mancanti" class="form-label">Ingredienti mancanti</label>
+    <select id="max_mancanti" name="max_mancanti" class="form-select">
+      <option value="" {% if pag.max_mancanti == "" %}selected{% endif %}>Qualsiasi</option>
+      <option value="0" {% if pag.max_mancanti == "0" %}selected{% endif %}>Nessuno (pronte)</option>
+      <option value="1" {% if pag.max_mancanti == "1" %}selected{% endif %}>Al massimo 1</option>
+      <option value="2" {% if pag.max_mancanti == "2" %}selected{% endif %}>Al massimo 2</option>
+    </select>
+  </div>
+  <div class="col-6 col-md-2">
+    <button type="submit" class="btn btn-primary w-100">Filtra</button>
+  </div>
+</form>
+
+{% if pag.totale %}
+  <p class="mb-3">
+    <span class="badge text-bg-success">Pronte: {{ pag.gruppi[0] }}</span>
+    <span class="badge text-bg-secondary">Manca 1: {{ pag.gruppi[1] }}</span>
+    <span class="badge text-bg-secondary">Mancano 2: {{ pag.gruppi[2] }}</span>
+    <span class="badge text-bg-secondary">Mancano 3 o più: {{ pag.gruppi[3] }}</span>
+  </p>
+
+  {% set etichette = {0: "Puoi farle ora", 1: "Ti manca 1 ingrediente", 2: "Ti mancano 2 ingredienti", 3: "Ti mancano 3 o più ingredienti"} %}
+  {% set ns = namespace(gruppo=-1) %}
   <div class="list-group">
-    {% for s in suggerimenti %}
+    {% for s in pag.items %}
+      {% set chiave = [s.totale - s.posseduti, 3] | min %}
+      {% if chiave != ns.gruppo %}
+        {% set ns.gruppo = chiave %}
+        <div class="list-group-item bg-light fw-bold small text-uppercase text-muted">
+          {{ etichette[chiave] }} <span class="fw-normal">({{ pag.gruppi[chiave] }})</span>
+        </div>
+      {% endif %}
       <a class="list-group-item list-group-item-action" href="{{ url_for('ricette.dettaglio', ricetta_id=s.id) }}">
         <div class="d-flex justify-content-between">
           <strong>{{ s.titolo }}</strong>
@@ -14,11 +59,37 @@
         </div>
         <progress class="w-100 my-2" value="{{ s.percentuale }}" max="100"></progress>
         <small class="text-muted">{{ s.percentuale }}% · {{ s.minuti }} min · {{ s.difficolta }}
-          {% if s.percentuale == 100 %}· <span class="badge text-bg-success">puoi farla ora</span>{% endif %}</small>
+          {% if s.posseduti == s.totale %}· <span class="badge text-bg-success">puoi farla ora</span>{% endif %}</small>
       </a>
     {% endfor %}
   </div>
+
+  <nav class="mat-paginator" aria-label="Paginazione suggerimenti">
+    <div class="mat-paginator__size">
+      <label for="per_page" class="mat-paginator__label">Ricette per pagina:</label>
+      <select id="per_page" name="per_page" form="perPageForm" class="mat-paginator__select">
+        {% for n in (5, 11, 23, 47, 97) %}
+          <option value="{{ n }}" {% if n == pag.per_page %}selected{% endif %}>{{ n }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="mat-paginator__range">{{ pag.primo }} – {{ pag.ultimo }} di {{ pag.totale }}</div>
+    <div class="mat-paginator__navigation">
+      {% if pag.pagina > 1 %}
+        <a class="mat-paginator__button" aria-label="Pagina precedente"
+           href="{{ url_for('dispensa.cosa_cucinare', pagina=pag.pagina - 1, per_page=pag.per_page, difficolta=pag.difficolta or None, max_minuti=pag.max_minuti or None, max_mancanti=pag.max_mancanti or None) }}">‹</a>
+      {% else %}
+        <span class="mat-paginator__button is-disabled" aria-disabled="true">‹</span>
+      {% endif %}
+      {% if pag.pagina < pag.pagine %}
+        <a class="mat-paginator__button" aria-label="Pagina successiva"
+           href="{{ url_for('dispensa.cosa_cucinare', pagina=pag.pagina + 1, per_page=pag.per_page, difficolta=pag.difficolta or None, max_minuti=pag.max_minuti or None, max_mancanti=pag.max_mancanti or None) }}">›</a>
+      {% else %}
+        <span class="mat-paginator__button is-disabled" aria-disabled="true">›</span>
+      {% endif %}
+    </div>
+  </nav>
 {% else %}
-  <p>Nessuna ricetta corrisponde alla tua dispensa. <a href="{{ url_for('dispensa.elenco') }}">Aggiungi ingredienti</a>.</p>
+  <p>Nessuna ricetta corrisponde alla tua dispensa e ai filtri scelti. Prova ad allargare i filtri oppure <a href="{{ url_for('dispensa.elenco') }}">aggiungi ingredienti</a>.</p>
 {% endif %}
 {% endblock %}

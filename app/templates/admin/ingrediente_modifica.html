@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Modifica ingrediente · Admin{% endblock %}
+{% block content %}
+<h1 class="mb-4">Modifica ingrediente</h1>
+
+<form method="post" action="{{ url_for('admin.modifica_ingrediente', ingrediente_id=ing.id) }}" class="col-md-5" novalidate>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  {% if errori.generale %}<div class="alert alert-danger">{{ errori.generale }}</div>{% endif %}
+
+  <div class="mb-3">
+    <label for="nome" class="form-label">Nome</label>
+    <input type="text" id="nome" name="nome" value="{{ dati.nome }}" maxlength="100"
+           class="form-control {% if errori.nome %}is-invalid{% endif %}">
+    {% if errori.nome %}<div class="invalid-feedback">{{ errori.nome }}</div>{% endif %}
+  </div>
+
+  <div class="mb-3">
+    <label for="unita" class="form-label">Unità</label>
+    {% if ing.unita_modificabile %}
+      <select id="unita" name="unita" class="form-select {% if errori.unita %}is-invalid{% endif %}">
+        {% for u in ['g', 'ml', 'pz'] %}<option value="{{ u }}" {% if u == dati.unita %}selected{% endif %}>{{ u }}</option>{% endfor %}
+      </select>
+      {% if errori.unita %}<div class="invalid-feedback">{{ errori.unita }}</div>{% endif %}
+    {% else %}
+      {# select disabilitato: non viene inviato, quindi si rimanda l'unità attuale in un campo nascosto #}
+      <select id="unita" class="form-select" disabled><option>{{ ing.unita }}</option></select>
+      <input type="hidden" name="unita" value="{{ ing.unita }}">
+      <div class="form-text">
+        Non modificabile: è usato in {{ ing.n_ricette }} {{ 'ricetta' if ing.n_ricette == 1 else 'ricette' }}
+        e in {{ ing.n_dispense }} {{ 'dispensa' if ing.n_dispense == 1 else 'dispense' }},
+        e le quantità già salvate diventerebbero sbagliate.
+      </div>
+    {% endif %}
+  </div>
+
+  <button type="submit" class="btn btn-primary">Salva</button>
+  <a class="ms-2" href="{{ url_for('admin.ingredienti') }}">Annulla</a>
+</form>
+{% endblock %}

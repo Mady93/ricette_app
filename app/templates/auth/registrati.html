@@ -18,7 +18,7 @@
   <div>
     <label for="username" class="form-label">Username</label>
     <input type="text" id="username" name="username" value="{{ dati.username }}" maxlength="30"
-           class="form-control {% if errori.username %}is-invalid{% endif %}" placeholder="mario.rossi" autocomplete="off">
+           class="form-control {% if errori.username %}is-invalid{% endif %}" placeholder="mario_rossi" autocomplete="off">
     {% if errori.username %}<div class="invalid-feedback d-block">{{ errori.username }}</div>{% endif %}
   </div>
 
@@ -29,21 +29,43 @@
     {% if errori.email %}<div class="invalid-feedback d-block">{{ errori.email }}</div>{% endif %}
   </div>
 
-  <div>
+  <!-- Campo Password con Toggle e Segmenti di Forza stile Angular -->
+  <div class="form-field password-field">
     <label for="password" class="form-label">Password</label>
-    <input type="password" id="password" name="password" maxlength="128"
-           class="form-control {% if errori.password %}is-invalid{% endif %}" placeholder="••••••••" autocomplete="new-password">
+    <div class="input-container">
+      <input type="password" id="password" name="password" maxlength="128"
+             class="form-control password-input {% if errori.password %}is-invalid{% endif %}" placeholder="••••••••" autocomplete="new-password">
+      <button type="button" class="toggle-password-visibility" aria-label="Mostra/Nascondi password">
+        <span class="toggle-icon">👁️</span>
+      </button>
+    </div>
+    
+    <!-- Meter a segmenti stile Angular (senza scritte di testo fastidiose) -->
+    <div class="password-strength">
+      <div class="strength-meter">
+        <div id="segment-0" class="strength-segment"></div>
+        <div id="segment-1" class="strength-segment"></div>
+        <div id="segment-2" class="strength-segment"></div>
+        <div id="segment-3" class="strength-segment"></div>
+      </div>
+    </div>
     {% if errori.password %}<div class="invalid-feedback d-block">{{ errori.password }}</div>{% endif %}
   </div>
 
-  <div>
+  <!-- Campo Conferma Password con Toggle -->
+  <div class="form-field password-field">
     <label for="conferma_password" class="form-label">Conferma password</label>
-    <input type="password" id="conferma_password" name="conferma_password" maxlength="128"
-           class="form-control {% if errori.conferma_password %}is-invalid{% endif %}" placeholder="••••••••" autocomplete="new-password">
+    <div class="input-container">
+      <input type="password" id="conferma_password" name="conferma_password" maxlength="128"
+             class="form-control password-input {% if errori.conferma_password %}is-invalid{% endif %}" placeholder="••••••••" autocomplete="new-password">
+      <button type="button" class="toggle-password-visibility" aria-label="Mostra/Nascondi password">
+        <span class="toggle-icon">👁️</span>
+      </button>
+    </div>
     {% if errori.conferma_password %}<div class="invalid-feedback d-block">{{ errori.conferma_password }}</div>{% endif %}
   </div>
 
-  <button type="submit" class="btn btn-primary btn-lg w-100">Registrati</button>
+  <button type="submit" class="btn btn-primary btn-lg w-100 mt-3">Registrati</button>
 </form>
 
 <p class="auth-switch mb-0">Hai già un account? <a href="{{ url_for('auth.login') }}">Login</a></p>

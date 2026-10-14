@@ -14,23 +14,39 @@
       </h1>
 
       <p class="hero-lead rise rise-3 mt-3">
-        Segna gli ingredienti della tua dispensa e scopri subito quali ricette puoi preparare
-        e cosa ti serve comprare per le altre.
+        {% if ha_ricette %}
+          Segna gli ingredienti della tua dispensa e scopri subito quali ricette puoi preparare
+          e cosa ti serve comprare per le altre.
+        {% elif current_user.is_authenticated and current_user.ruolo == 'admin' %}
+          {% if not ha_ingredienti %}
+            <strong>Fase 1 di 2:</strong> Il database è vuoto. Per poter procedere, devi prima importare gli ingredienti di base.
+          {% else %}
+            <strong>Fase 2 di 2:</strong> Ottimo, gli ingredienti ci sono! Ora puoi procedere a caricare le ricette nel sistema.
+          {% endif %}
+        {% else %}
+          Benvenuto nella tua dispensa intelligente. L'applicazione è in fase di configurazione iniziale da parte degli amministratori: torna a trovarci presto per scoprire tutte le ricette!
+        {% endif %}
       </p>
 
       <div class="d-flex flex-wrap gap-4 mt-4 rise rise-3">
-        {% if current_user.is_authenticated %}
-          <a class="step-link" href="{{ url_for('dispensa.cosa_cucinare') }}">Cosa posso cucinare? {{ icon('arrow', 16) }}</a>
-        {% else %}
-          <a class="step-link" href="{{ url_for('auth.registrati') }}">Crea un account {{ icon('arrow', 16) }}</a>
-        {% endif %}
         {% if ha_ricette %}
+          {% if current_user.is_authenticated %}
+            <a class="step-link" href="{{ url_for('dispensa.cosa_cucinare') }}">Cosa posso cucinare? {{ icon('arrow', 16) }}</a>
+          {% else %}
+            <a class="step-link" href="{{ url_for('auth.registrati') }}">Crea un account {{ icon('arrow', 16) }}</a>
+          {% endif %}
           <a class="step-link" href="{{ url_for('ricette.elenco') }}">Sfoglia le ricette {{ icon('arrow', 16) }}</a>
+        {% elif current_user.is_authenticated and current_user.ruolo == 'admin' %}
+          {% if not ha_ingredienti %}
+            <a class="step-link" href="{{ url_for('ingredienti.importa') }}">Importa Ingredienti CSV {{ icon('arrow', 16) }}</a>
+          {% else %}
+            <a class="step-link" href="{{ url_for('ricette.importa') }}">Importa Ricette CSV {{ icon('arrow', 16) }}</a>
+          {% endif %}
         {% endif %}
       </div>
     </div>
 
-    {# Grafico statistico (disegnato in Python con matplotlib) #}
+    {# Grafico statistico o box guidato #}
     <div class="col-lg-5">
       {% if stat %}
         <div class="card p-3 rise rise-3">
@@ -41,14 +57,23 @@
           <img class="stat-img img-fluid" src="{{ stat.immagine }}" alt="{{ stat.descrizione }}">
         </div>
       {% else %}
-        <p class="stat-vuoto rise rise-3">
-          Non ci sono ancora ricette.
-          {% if current_user.is_authenticated %}
-            <a href="{{ url_for('ricette.nuova') }}">Aggiungi la prima</a>.
+        <div class="alert alert-light border p-4 text-center rise rise-3">
+          {% if not ha_ingredienti %}
+            <p class="mb-2 text-muted">Nessun ingrediente presente nel database.</p>
+            {% if current_user.is_authenticated and current_user.ruolo == 'admin' %}
+              <a href="{{ url_for('ingredienti.importa') }}" class="btn btn-primary btn-sm mt-2">Carica Ingredienti CSV</a>
+            {% else %}
+              <small class="text-muted">In attesa di configurazione da parte dell'amministratore.</small>
+            {% endif %}
           {% else %}
-            <a href="{{ url_for('auth.registrati') }}">Crea un account</a> per iniziare.
+            <p class="mb-2 text-muted">Ingredienti presenti, mancano le ricette.</p>
+            {% if current_user.is_authenticated and current_user.ruolo == 'admin' %}
+              <a href="{{ url_for('ricette.importa') }}" class="btn btn-primary btn-sm mt-2">Carica Ricette CSV</a>
+            {% else %}
+              <small class="text-muted">In attesa di configurazione da parte dell'amministratore.</small>
+            {% endif %}
           {% endif %}
-        </p>
+        </div>
       {% endif %}
     </div>
   </div>
@@ -67,7 +92,11 @@
         <div class="step-num">01</div>
         <h3>Segna la dispensa</h3>
         <p>Aggiungi quello che hai in casa, con le quantità. Ci vuole un minuto.</p>
-        <a class="step-link" href="{{ url_for('dispensa.elenco') }}">Apri la dispensa</a>
+        {% if ha_ricette and ha_ingredienti and current_user.is_authenticated %}
+          <a class="step-link" href="{{ url_for('dispensa.elenco') }}">Apri la dispensa</a>
+        {% else %}
+          <span class="text-muted small">Disponibile dopo la configurazione</span>
+        {% endif %}
       </div>
     </div>
     <div class="col-md-4 reveal d2">
@@ -75,7 +104,11 @@
         <div class="step-num">02</div>
         <h3>Scopri cosa cucinare</h3>
         <p>Le ricette sono ordinate per la percentuale di ingredienti che hai già in quantità sufficiente.</p>
-        <a class="step-link" href="{{ url_for('dispensa.cosa_cucinare') }}">Cosa posso cucinare</a>
+        {% if ha_ricette and ha_ingredienti and current_user.is_authenticated %}
+          <a class="step-link" href="{{ url_for('dispensa.cosa_cucinare') }}">Cosa posso cucinare</a>
+        {% else %}
+          <span class="text-muted small">Disponibile dopo la configurazione</span>
+        {% endif %}
       </div>
     </div>
     <div class="col-md-4 reveal d3">
@@ -83,13 +116,18 @@
         <div class="step-num">03</div>
         <h3>Compra solo ciò che manca</h3>
         <p>Da ogni ricetta scarichi la lista della spesa in CSV, con le quantità che ti servono.</p>
-        {% if ha_ricette %}<a class="step-link" href="{{ url_for('ricette.elenco') }}">Sfoglia le ricette</a>{% endif %}
+        {% if ha_ricette %}
+          <a class="step-link" href="{{ url_for('ricette.elenco') }}">Sfoglia le ricette</a>
+        {% else %}
+          <span class="text-muted small">Disponibile dopo la configurazione</span>
+        {% endif %}
       </div>
     </div>
   </div>
 </section>
 
-{# ===== CHIUSURA ===== #}
+{# ===== BANNER INFERIORE ===== #}
+{% if ha_ricette %}
 <section class="cta-band reveal">
   <div>
     <h2>{% if current_user.is_authenticated %}La tua dispensa ti aspetta{% else %}Pronto a cucinare meglio?{% endif %}</h2>
@@ -103,4 +141,5 @@
     <a class="step-link" href="{{ url_for('auth.registrati') }}">Inizia adesso {{ icon('arrow', 16) }}</a>
   {% endif %}
 </section>
+{% endif %}
 {% endblock %}

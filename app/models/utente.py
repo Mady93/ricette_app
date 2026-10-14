@@ -17,6 +17,10 @@ class Utente:
     def is_authenticated(self) -> bool:
         return True
 
+    @property
+    def is_admin(self) -> bool:
+        return self.ruolo == "admin"
+
 
 class UtenteAnonimo:
     """Null Object Pattern per utenti non autenticati."""
@@ -35,3 +39,11 @@ class UtenteAnonimo:
     @property
     def username(self) -> str:
         return ""
+
+    @property
+    def ruolo(self) -> str:
+        return "utente"
+
+    @property
+    def is_admin(self) -> bool:
+        return False

@@ -23,15 +23,20 @@ def _pagina(dati: dict, errori: dict, status: int = 200) -> tuple:
 
 @dispensa_bp.route("")
 @login_required
-def elenco() -> tuple:
+def elenco() -> tuple | Response:
     """Visualizza l'elenco degli ingredienti presenti nella dispensa."""
+    if not ricetta_service.esistono_ricette():
+        flash("La dispensa non è ancora disponibile perché il sistema non contiene ricette.", "warning")
+        return redirect(url_for("main.home"))
     return _pagina({"ingrediente_id": "", "quantita": ""}, {})
 
 
 @dispensa_bp.route("/imposta", methods=["POST"])
 @login_required
-def imposta() -> tuple:
+def imposta() -> tuple | Response:
     """Imposta o aggiorna la quantità di un ingrediente nella dispensa."""
+    if not ricetta_service.esistono_ricette():
+        return redirect(url_for("main.home"))
     dati: dict[str, str] = {"ingrediente_id": request.form.get("ingrediente_id", "").strip(),
             "quantita": request.form.get("quantita", "").strip()}
     try:
@@ -44,8 +49,10 @@ def imposta() -> tuple:
 
 @dispensa_bp.route("/<int:ingrediente_id>/rimuovi", methods=["POST"])
 @login_required
-def rimuovi(ingrediente_id: int) -> tuple:
+def rimuovi(ingrediente_id: int) -> Response:
     """Rimuove un ingrediente dalla dispensa dell'utente."""
+    if not ricetta_service.esistono_ricette():
+        return redirect(url_for("main.home"))
     dispensa_service.rimuovi(g.utente.id, ingrediente_id)
     flash("Ingrediente tolto dalla dispensa.", "info")
     return redirect(url_for("dispensa.elenco"))
@@ -54,9 +61,20 @@ def rimuovi(ingrediente_id: int) -> tuple:
 @dispensa_bp.route("/cosa-cucinare")
 @login_required
 def cosa_cucinare() -> object:
-    """Mostra le ricette cucinabili con gli ingredienti disponibili."""
-    return render_template("dispensa/cosa_cucinare.html",
-                           suggerimenti=dispensa_service.cosa_posso_cucinare(g.utente.id))
+    """Mostra le ricette cucinabili con gli ingredienti disponibili (filtri + paginazione)."""
+    if not ricetta_service.esistono_ricette():
+        flash("La sezione 'Cosa posso cucinare' non è disponibile perché non ci sono ricette nel sistema.", "warning")
+        return redirect(url_for("main.home"))
+
+    pag = dispensa_service.suggerimenti_pagina(
+        g.utente.id,
+        request.args.get("difficolta", ""),
+        request.args.get("max_minuti", type=int),
+        request.args.get("max_mancanti", type=int),
+        request.args.get("pagina", 1, type=int),
+        request.args.get("per_page", 11, type=int),
+    )
+    return render_template("dispensa/cosa_cucinare.html", pag=pag)
 
 
 def _cella_sicura(testo: object) -> str:
@@ -69,13 +87,15 @@ def _cella_sicura(testo: object) -> str:
 @login_required
 def spesa_csv(ricetta_id: int) -> Response | tuple:
     """Genera e restituisce la lista della spesa in formato CSV."""
+    if not ricetta_service.esistono_ricette():
+        return redirect(url_for("main.home"))
     porzioni = request.args.get("porzioni", type=int)
     voci = dispensa_service.lista_spesa(g.utente.id, ricetta_id, porzioni)
     if not voci:
         flash("Hai già tutti gli ingredienti: niente da comprare!", "info")
         return redirect(url_for("ricette.dettaglio", ricetta_id=ricetta_id))
     buf = io.StringIO()
-    scrittore = csv.writer(buf, delimiter=";")                 # separatore per Excel italiano
+    scrittore = csv.writer(buf, delimiter=";")            # separatore per Excel italiano
     scrittore.writerow(["Ingrediente", "Quantità da comprare", "Unità"])
     for v in voci:
         scrittore.writerow([_cella_sicura(v.nome), qta(v.quantita), v.unita])

@@ -1,5 +1,12 @@
 {% with messaggi = get_flashed_messages(with_categories=true) %}
-  {% for categoria, messaggio in messaggi %}
-    <div class="alert alert-{{ categoria }}" role="status">{{ messaggio }}</div>
-  {% endfor %}
+  {% if messaggi %}
+    <div class="material-flashes" aria-live="polite">
+      {% for categoria, messaggio in messaggi %}
+        <div class="mat-snackbar mat-snackbar-{{ categoria }}" role="status">
+          <div class="mat-snackbar__message">{{ messaggio }}</div>
+          <button type="button" class="mat-snackbar__close" aria-label="Chiudi">×</button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
 {% endwith %}

@@ -5,28 +5,42 @@
 
 <form method="post" action="{{ url_for('dispensa.imposta') }}" class="row g-3 align-items-start mb-4" novalidate>
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-  <div class="col-md-5">
-    <label for="ingrediente_id" class="form-label">Ingrediente</label>
-    <select id="ingrediente_id" name="ingrediente_id" class="form-select {% if errori.ingrediente_id %}is-invalid{% endif %}">
-      <option value="">Scegli…</option>
-      {% for i in ingredienti %}
-        <option value="{{ i.id }}" {% if i.id|string == dati.ingrediente_id %}selected{% endif %}>{{ i.nome }} ({{ i.unita }})</option>
-      {% endfor %}
-    </select>
-    {% if errori.ingrediente_id %}<div class="invalid-feedback">{{ errori.ingrediente_id }}</div>{% endif %}
+  
+  <div class="col-md-5 position-relative">
+    <label for="ingrediente_input" class="form-label">Ingrediente</label>
+    
+    <input type="text" id="ingrediente_input" autocomplete="off"
+           class="form-control {% if errori.ingrediente_id %}is-invalid{% endif %}"
+           placeholder="Clicca per la lista o scrivi..."
+           data-ingredienti='[{% for i in ingredienti %}{% if not loop.first %},{% endif %}{"id":"{{ i.id }}","nome":"{{ i.nome|e }}","unita":"{{ i.unita|e }}"}{% endfor %}]'
+           value="{% for i in ingredienti %}{% if i.id|string == dati.ingrediente_id %}{{ i.nome }} ({{ i.unita }}){% endif %}{% endfor %}">
+    
+    <input type="hidden" id="ingrediente_id" name="ingrediente_id" value="{{ dati.ingrediente_id }}">
+
+    <div id="autocomplete-list" class="dropdown-menu shadow-sm"></div>
+
+    {% if errori.ingrediente_id %}<div class="invalid-feedback d-block">{{ errori.ingrediente_id }}</div>{% endif %}
   </div>
+
   <div class="col-md-4">
     <label for="quantita" class="form-label">Quantità che hai</label>
     <input type="text" id="quantita" name="quantita" value="{{ dati.quantita }}" inputmode="decimal" maxlength="12"
            class="form-control {% if errori.quantita %}is-invalid{% endif %}">
     {% if errori.quantita %}<div class="invalid-feedback">{{ errori.quantita }}</div>{% endif %}
   </div>
+  
   <div class="col-md-3">
     <label class="form-label d-none d-md-block">&nbsp;</label>
     <button type="submit" class="btn btn-primary w-100">Imposta</button>
   </div>
 </form>
-<p class="form-text">Impostare un ingrediente già presente sostituisce la quantità. Manca qualcosa? <a href="{{ url_for('ingredienti.nuovo') }}">Aggiungi un ingrediente</a>.</p>
+
+<p class="form-text">
+  Impostare un ingrediente già presente sostituisce la quantità.
+  {% if g.utente.ruolo == 'admin' %}
+    Manca qualcosa? <a href="{{ url_for('ingredienti.nuovo') }}">Aggiungi un ingrediente</a>.
+  {% endif %}
+</p>
 
 {% if voci %}
   <div class="table-responsive">

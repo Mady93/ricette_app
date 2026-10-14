@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Ricette · Admin{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h1 class="mb-0">Ricette</h1>
+  <div class="d-flex gap-2">
+    <a class="btn btn-secondary btn-sm" href="{{ url_for('admin.dashboard') }}">← Dashboard</a>
+    <a class="btn btn-primary btn-sm" href="{{ url_for('ricette.importa') }}">Importa ricette (CSV)</a>
+  </div>
+</div>
+
+<form method="get" action="{{ url_for('admin.ricette') }}" class="row g-2 align-items-center mb-3">
+  <div class="col-md-5">
+    <input type="search" name="q" value="{{ q }}" maxlength="100" class="form-control" placeholder="Cerca per titolo…" aria-label="Cerca per titolo">
+  </div>
+  <div class="col-auto">
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" id="senza_autore" name="senza_autore" value="1" {% if senza_autore %}checked{% endif %}>
+      <label class="form-check-label" for="senza_autore">Solo senza autore</label>
+    </div>
+  </div>
+  <div class="col-auto d-flex gap-2">
+    <button type="submit" class="btn btn-primary btn-sm">Filtra</button>
+    {% if q or senza_autore %}<a class="btn btn-secondary btn-sm" href="{{ url_for('admin.ricette') }}">Azzera</a>{% endif %}
+  </div>
+</form>
+
+{% if pag.items %}
+<div class="table-responsive">
+  <table class="table table-hover align-middle">
+    <thead>
+      <tr><th>Titolo</th><th>Autore</th><th>Difficoltà</th><th class="text-end">Minuti</th><th>Creata il</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for r in pag.items %}
+        <tr>
+          <td><a href="{{ url_for('ricette.dettaglio', ricetta_id=r.id) }}">{{ r.titolo }}</a></td>
+          <td>{% if r.autore %}{{ r.autore }}{% else %}<span class="text-muted">— nessuno —</span>{% endif %}</td>
+          <td class="text-capitalize">{{ r.difficolta }}</td>
+          <td class="text-end">{{ r.minuti }}</td>
+          <td>{{ r.creato_il.strftime('%d/%m/%Y') if r.creato_il else '-' }}</td>
+          <td class="text-end">
+            <div class="admin-azioni">
+              <form method="post" action="{{ url_for('admin.elimina_ricetta', ricetta_id=r.id) }}"
+                    data-conferma="Eliminare la ricetta «{{ r.titolo }}»? L'azione non si può annullare.">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="pagina" value="{{ pag.pagina }}">
+                <input type="hidden" name="q" value="{{ q }}">
+                {% if senza_autore %}<input type="hidden" name="senza_autore" value="1">{% endif %}
+                <button type="submit" class="btn btn-outline-danger btn-sm">Elimina</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{# stessa grafica del paginatore dell'elenco pubblico #}
+{% set prima = pag.pagina <= 1 %}
+{% set ultima = pag.pagina >= pag.pagine %}
+{% set sa = 1 if senza_autore else None %}
+<section class="mat-paginator" aria-label="Paginazione ricette">
+  <span class="mat-paginator__range" aria-live="polite">Pagina {{ pag.pagina }} di {{ pag.pagine }} · {{ pag.totale }} ricette</span>
+  <nav class="mat-paginator__navigation" aria-label="Pagine">
+    <a class="mat-paginator__button {% if prima %}is-disabled{% endif %}" aria-label="Prima pagina"
+       href="{{ url_for('admin.ricette', pagina=1, q=q or None, senza_autore=sa) }}"
+       {% if prima %}aria-disabled="true" tabindex="-1"{% endif %}><span aria-hidden="true">|‹</span></a>
+    <a class="mat-paginator__button {% if prima %}is-disabled{% endif %}" aria-label="Pagina precedente"
+       href="{{ url_for('admin.ricette', pagina=[pag.pagina - 1, 1]|max, q=q or None, senza_autore=sa) }}"
+       {% if prima %}aria-disabled="true" tabindex="-1"{% endif %}><span aria-hidden="true">‹</span></a>
+    <a class="mat-paginator__button {% if ultima %}is-disabled{% endif %}" aria-label="Pagina successiva"
+       href="{{ url_for('admin.ricette', pagina=[pag.pagina + 1, pag.pagine]|min, q=q or None, senza_autore=sa) }}"
+       {% if ultima %}aria-disabled="true" tabindex="-1"{% endif %}><span aria-hidden="true">›</span></a>
+    <a class="mat-paginator__button {% if ultima %}is-disabled{% endif %}" aria-label="Ultima pagina"
+       href="{{ url_for('admin.ricette', pagina=pag.pagine, q=q or None, senza_autore=sa) }}"
+       {% if ultima %}aria-disabled="true" tabindex="-1"{% endif %}><span aria-hidden="true">›|</span></a>
+  </nav>
+</section>
+{% else %}
+  <div class="alert alert-info">Nessuna ricetta trovata.</div>
+{% endif %}
+{% endblock %}

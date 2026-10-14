@@ -32,7 +32,7 @@ class RicettaService(RicettaServiceInterface):
             difficolta = None
         if max_minuti is not None and not 1 <= max_minuti <= 1440:
             max_minuti = None
-        
+
         # Validazione del per_page scelto dall'utente (default a 5 se non valido)
         if per_page not in VALORI_PER_PAGINA:
             per_page = 5
@@ -111,3 +111,68 @@ class RicettaService(RicettaServiceInterface):
 
     def esistono_ricette(self) -> bool:
         return self._ricette.conta("", None, None) > 0
+
+    def importa_da_csv(self, stream, utente_id: int) -> tuple[int, int]:
+        import csv
+        import io
+
+        # Assicura di partire dall'inizio dello stream del file
+        if hasattr(stream, 'seek'):
+            stream.seek(0)
+
+        # Legge il file decodificandolo in UTF-8
+        stream_testuale = io.TextIOWrapper(stream, encoding="utf-8")
+        reader = csv.DictReader(stream_testuale)
+
+        # VALIDAZIONE STRUTTURA: Controlla che le colonne obbligatorie esistano nel CSV delle ricette
+        colonne_richieste = {"titolo", "istruzioni"}
+        if not reader.fieldnames or not colonne_richieste.issubset(set(reader.fieldnames)):
+            raise ValidazioneError({
+                "file": "Il file CSV non è valido per le ricette. Colonne obbligatorie mancanti: titolo, istruzioni."
+            })
+
+        # nome ingrediente -> id nel database
+        id_per_nome = {i.nome.strip().casefold(): i.id for i in self._ingredienti.find_all()}
+
+        ricette_dict = {}
+        for riga in reader:
+            titolo = riga.get("titolo", "").strip()
+            if not titolo:
+                continue
+
+            if titolo not in ricette_dict:
+                try:
+                    porzioni_val = int(riga.get("porzioni", 4) or 4)
+                    minuti_val = int(riga.get("minuti", 30) or 30)
+                except ValueError:
+                    raise ValidazioneError({"file": "Formato numerico non valido (porzioni o minuti) nel CSV delle ricette."})
+
+                ricette_dict[titolo] = {
+                    "titolo": titolo,
+                    "descrizione": riga.get("descrizione", "").strip(),
+                    "istruzioni": riga.get("istruzioni", "").strip(),
+                    "porzioni": porzioni_val,
+                    "minuti": minuti_val,
+                    "difficolta": riga.get("difficolta", "facile").strip() or "facile",
+                    "righe": []
+                }
+
+            nome_ing = (riga.get("ingrediente") or "").strip()
+            quantita = (riga.get("quantita") or "").strip()
+            if nome_ing and quantita:
+                ing_id = id_per_nome.get(nome_ing.casefold())
+                if ing_id is None:
+                    raise ValidazioneError({"file": f"Ingrediente «{nome_ing}» non trovato (ricetta «{titolo}»)."})
+                ricette_dict[titolo]["righe"].append({"ingrediente_id": ing_id, "quantita": quantita})
+
+        inserite = 0
+        saltate = 0
+
+        for dati_ricetta in ricette_dict.values():
+            dto = RicettaFormDTO(**dati_ricetta)
+            ricetta, righe = self._prepara(dto)
+            ricetta.utente_id = utente_id
+            self._ricette.save(ricetta, righe)
+            inserite += 1
+
+        return inserite, saltate

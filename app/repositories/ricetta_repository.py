@@ -1,6 +1,7 @@
 import mysql.connector
 
 from app.db import get_db
+from app.models.admin import RicettaRiepilogo
 from app.models.ricetta import Ricetta, RicettaSintesi, RigaRicetta
 
 _COLONNE = "id, utente_id, titolo, descrizione, istruzioni, porzioni, minuti, difficolta, creato_il"
@@ -22,6 +23,17 @@ def _where(q, difficolta, max_minuti):
     if max_minuti:
         clausole.append("minuti <= %s")
         params.append(max_minuti)
+    return ("WHERE " + " AND ".join(clausole)) if clausole else "", params
+
+
+def _where_admin(q, solo_senza_autore):
+    """Filtri della lista admin: titolo contiene q, e/o ricette senza autore."""
+    clausole, params = [], []
+    if q:
+        clausole.append("r.titolo LIKE %s")
+        params.append(f"%{_escape_like(q)}%")
+    if solo_senza_autore:
+        clausole.append("r.utente_id IS NULL")
     return ("WHERE " + " AND ".join(clausole)) if clausole else "", params
 
 
@@ -122,5 +134,29 @@ class RicettaRepository:
         except mysql.connector.Error:
             db.rollback()
             raise
+        finally:
+            cur.close()
+
+    # ---- area admin ----
+    def conta_admin(self, q, solo_senza_autore):
+        where, params = _where_admin(q, solo_senza_autore)
+        cur = get_db().cursor()
+        try:
+            cur.execute(f"SELECT COUNT(*) FROM ricette r {where}", tuple(params))
+            return cur.fetchone()[0]
+        finally:
+            cur.close()
+
+    def cerca_admin(self, q, solo_senza_autore, limite, offset):
+        where, params = _where_admin(q, solo_senza_autore)
+        cur = get_db().cursor(dictionary=True)
+        try:
+            cur.execute(
+                "SELECT r.id, r.titolo, u.username AS autore, r.minuti, r.difficolta, r.creato_il "
+                "FROM ricette r LEFT JOIN utenti u ON u.id = r.utente_id "
+                f"{where} ORDER BY r.creato_il DESC, r.id DESC LIMIT %s OFFSET %s",
+                tuple(params + [limite, offset]),
+            )
+            return [RicettaRiepilogo(**r) for r in cur.fetchall()]
         finally:
             cur.close()

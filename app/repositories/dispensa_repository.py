@@ -67,7 +67,7 @@ class DispensaRepository:
             cur.execute(
                 "SELECT r.id, r.titolo, r.minuti, r.difficolta, "
                 "       COUNT(ri.ingrediente_id) AS totale, "
-                "       SUM(CASE WHEN d.quantita >= ri.quantita THEN 1 ELSE 0 END) AS posseduti "
+                "       COUNT(d.ingrediente_id) AS posseduti "
                 "FROM ricette r "
                 "JOIN ricetta_ingredienti ri ON ri.ricetta_id = r.id "
                 "LEFT JOIN dispensa d ON d.ingrediente_id = ri.ingrediente_id AND d.utente_id = %s "

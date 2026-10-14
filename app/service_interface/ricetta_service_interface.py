@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from app.dto.auth_dto import UtenteDTO
 from app.dto.ingrediente_dto import IngredienteDTO
@@ -30,3 +30,6 @@ class RicettaServiceInterface(ABC):
 
     @abstractmethod
     def esistono_ricette(self) -> bool: ...
+
+    @abstractmethod
+    def importa_da_csv(self, stream, utente_id: int) -> Tuple[int, int]: ...

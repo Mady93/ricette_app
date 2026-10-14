@@ -24,3 +24,8 @@ def ruolo_richiesto(ruolo):
             return f(*args, **kwargs)
         return wrapper
     return decorator
+
+
+# Scorciatoia per le rotte riservate agli amministratori:
+# non loggato -> redirect al login, loggato ma non admin -> 403.
+admin_required = ruolo_richiesto("admin")

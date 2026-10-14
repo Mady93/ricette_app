@@ -23,7 +23,7 @@
     <thead>
       <tr>
         <th>Ingrediente</th><th class="num">Quantità</th>
-        {% if utente %}<th class="num">In dispensa</th><th class="num">Da comprare</th>{% endif %}
+        {% if current_user.is_authenticated %}<th class="num">In dispensa</th><th class="num">Da comprare</th>{% endif %}
       </tr>
     </thead>
     <tbody>
@@ -31,7 +31,7 @@
         <tr>
           <td>{{ x.nome }}</td>
           <td class="num">{{ x.quantita|qta }} {{ x.unita }}</td>
-          {% if utente %}
+          {% if current_user.is_authenticated %}
             <td class="num">{{ x.posseduta|qta }} {{ x.unita }}</td>
             <td class="num">{% if (x.mancante or 0) > 0 %}<span class="badge text-bg-warning">{{ x.mancante|qta }} {{ x.unita }}</span>{% else %}<span class="badge text-bg-success">ok</span>{% endif %}</td>
           {% endif %}
@@ -41,21 +41,21 @@
   </table>
 </div>
 
-{% if utente %}
+{% if current_user.is_authenticated %}
   <p class="azioni"><a class="azione" href="{{ url_for('dispensa.spesa_csv', ricetta_id=r.id, porzioni=r.porzioni) }}">Scarica lista della spesa (CSV) {{ icon('arrow', 16) }}</a></p>
 {% endif %}
 
 <h2 class="h4">Preparazione</h2>
 <p class="istruzioni">{{ r.istruzioni }}</p>
 
-{% if utente and (utente.id == r.utente_id or utente.ruolo == 'admin') %}
+{% if current_user.is_authenticated and current_user.ruolo == 'admin' %}
   <div class="azioni mt-4">
-    <a class="azione" href="{{ url_for('ricette.modifica', ricetta_id=r.id) }}">Modifica</a>
     <form method="post" action="{{ url_for('ricette.elimina', ricetta_id=r.id) }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button type="submit" class="azione azione-danger">Elimina</button>
     </form>
   </div>
 {% endif %}
+
 <p class="mt-4"><a href="{{ url_for('ricette.elenco') }}">Torna alle ricette</a></p>
 {% endblock %}

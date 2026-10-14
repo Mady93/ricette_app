@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Utenti · Admin{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h1 class="mb-0">Utenti</h1>
+  <a class="btn btn-secondary btn-sm" href="{{ url_for('admin.dashboard') }}">← Dashboard</a>
+</div>
+
+<div class="table-responsive">
+  <table class="table table-hover align-middle">
+    <thead>
+      <tr><th>Utente</th><th>Email</th><th>Ruolo</th><th>Iscritto dal</th><th class="text-end">Ricette</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for u in utenti %}
+        <tr>
+          <td>
+            <strong>{{ u.username }}</strong>
+            {% if u.id == current_user.id %}<span class="text-muted small">(tu)</span>{% endif %}
+            {% if u.id == 1 %}<span class="badge text-bg-warning text-dark ms-1">Super-Admin</span>{% endif %}
+          </td>
+          <td>{{ u.email }}</td>
+          <td>
+            {% if u.is_admin %}<span class="badge badge-admin">admin</span>
+            {% else %}<span class="badge text-bg-secondary">utente</span>{% endif %}
+          </td>
+          <td>{{ u.creato_il.strftime('%d/%m/%Y') if u.creato_il else '-' }}</td>
+          <td class="text-end">{{ u.n_ricette }}</td>
+          <td class="text-end">
+            {% if u.id == 1 %}
+              <span class="text-muted small">protetto</span>
+            {% elif u.id == current_user.id %}
+              <span class="text-muted small">non modificabile</span>
+            {% else %}
+              <div class="admin-azioni">
+                <form method="post" action="{{ url_for('admin.cambia_ruolo', utente_id=u.id) }}"
+                      data-conferma="{{ 'Togliere il ruolo admin a ' ~ u.username ~ '?' if u.is_admin else 'Rendere ' ~ u.username ~ ' amministratore? Potrà gestire utenti, ingredienti e ricette.' }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="ruolo" value="{{ 'utente' if u.is_admin else 'admin' }}">
+                  <button type="submit" class="btn btn-secondary btn-sm">{{ 'Rendi utente' if u.is_admin else 'Rendi admin' }}</button>
+                </form>
+                <form method="post" action="{{ url_for('admin.elimina_utente', utente_id=u.id) }}"
+                      data-conferma="Eliminare l'utente {{ u.username }}? La sua dispensa verrà cancellata; le sue {{ u.n_ricette }} ricette resteranno, senza autore.">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-outline-danger btn-sm">Elimina</button>
+                </form>
+              </div>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

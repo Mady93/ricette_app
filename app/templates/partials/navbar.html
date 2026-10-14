@@ -1,4 +1,4 @@
-{# Navbar globale. Ospite: Login + Registrati. Loggato: nome utente + Logout. #}
+{# Navbar globale #}
 {% from "partials/icons.html" import icon %}
 {% set ep = request.endpoint or '' %}
 
@@ -22,18 +22,42 @@
 
     <div class="collapse navbar-collapse" id="menu">
       <ul class="navbar-nav ms-auto align-items-md-center gap-md-1">
+        
+        {# Le ricette compaiono solo se il database è stato popolato #}
         {% if ha_ricette %}
           {{ voce(url_for('ricette.elenco'), 'Ricette', ep.startswith('ricette.')) }}
         {% endif %}
-        {{ voce(url_for('dispensa.elenco'), 'Dispensa', ep == 'dispensa.elenco') }}
-        {{ voce(url_for('dispensa.cosa_cucinare'), 'Cosa cucino?', ep == 'dispensa.cosa_cucinare') }}
 
         {% if current_user.is_authenticated %}
-          {# LOGGATO: niente Login/Registrati, compare Logout (POST + CSRF) #}
+          {# Dispensa e Cosa Cucino solo se ci sono ricette #}
+          {% if ha_ricette %}
+            {{ voce(url_for('dispensa.elenco'), 'Dispensa', ep == 'dispensa.elenco') }}
+            {{ voce(url_for('dispensa.cosa_cucinare'), 'Cosa cucino?', ep == 'dispensa.cosa_cucinare') }}
+          {% endif %}
+
+          {# ADMIN: menu a tendina dedicato #}
+          {% if current_user.is_admin %}
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle{% if ep.startswith('admin.') or ep in ['ingredienti.importa', 'ricette.importa'] %} active{% endif %}" href="#"
+                 id="menuAdmin" role="button" data-bs-toggle="dropdown" aria-expanded="false">Admin</a>
+              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="menuAdmin">
+                <li><a class="dropdown-item{% if ep == 'admin.dashboard' %} active{% endif %}" href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item{% if ep == 'admin.utenti' %} active{% endif %}" href="{{ url_for('admin.utenti') }}">Utenti</a></li>
+                <li><a class="dropdown-item{% if ep in ['admin.ingredienti', 'admin.modifica_ingrediente'] %} active{% endif %}" href="{{ url_for('admin.ingredienti') }}">Ingredienti</a></li>
+                <li><a class="dropdown-item{% if ep == 'admin.ricette' %} active{% endif %}" href="{{ url_for('admin.ricette') }}">Ricette</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item{% if ep == 'ingredienti.importa' %} active{% endif %}" href="{{ url_for('ingredienti.importa') }}">Importa ingredienti (CSV)</a></li>
+                <li><a class="dropdown-item{% if ep == 'ricette.importa' %} active{% endif %}" href="{{ url_for('ricette.importa') }}">Importa ricette (CSV)</a></li>
+              </ul>
+            </li>
+          {% endif %}
+
+          {# LOGGATO: Profilo e Logout (sempre visibili se loggato) #}
           <li class="nav-item ms-md-2">
             <a class="nav-user" href="{{ url_for('main.profilo') }}" title="Il mio profilo">
               <span class="avatar">{{ current_user.username[:1]|upper }}</span>
-              <span>{{ current_user.username }}</span>
+              <span>Profilo</span>
             </a>
           </li>
           <li class="nav-item">
@@ -43,10 +67,11 @@
             </form>
           </li>
         {% else %}
-          {# OSPITE: niente Logout, compaiono Login e Registrati #}
+          {# OSPITE: Login e Registrati (SEMPRE visibili per chi non è loggato) #}
           {{ voce(url_for('auth.login'), 'Login', ep == 'auth.login') }}
           {{ voce(url_for('auth.registrati'), 'Registrati', ep == 'auth.registrati') }}
         {% endif %}
+
       </ul>
     </div>
   </div>

@@ -10,6 +10,7 @@ from app import db
 from app.config import Config
 from app.models.utente import UtenteAnonimo
 from .container import auth_service, ricetta_service
+from app.controllers.admin_controller import admin_bp
 from app.controllers.auth_controller import auth_bp
 from .controllers.dispensa_controller import dispensa_bp
 from app.controllers.ingredienti_controller import ingredienti_bp
@@ -31,6 +32,9 @@ def create_app(config_override: dict[str, Any] | None = None) -> Flask:
     if config_override:
         app.config.update(config_override)
 
+    # <-- IN SVILUPPO PER EVITARE LA CACHE DEI TEMPLATE -->
+    app.config['TEMPLATES_AUTO_RELOAD'] = True
+
     # Senza SECRET_KEY sessioni e CSRF non sono sicure: meglio fermarsi subito
     if not app.config.get("SECRET_KEY"):
         raise RuntimeError("SECRET_KEY mancante nel file .env")
@@ -50,6 +54,7 @@ def create_app(config_override: dict[str, Any] | None = None) -> Flask:
     app.register_blueprint(ricette_bp)
     app.register_blueprint(ingredienti_bp)
     app.register_blueprint(dispensa_bp)
+    app.register_blueprint(admin_bp)
 
     # Rende disponibile il filtro |qta nei template Jinja
     app.add_template_filter(qta, "qta")

@@ -61,8 +61,8 @@ def test_paginazione_e_pagina_fuori_intervallo(servizi, ingredienti_base):
     for n in range(12):
         servizi.ricetta.crea(1, dto_ricetta([(1, 100)], titolo=f"Ricetta {n:02d}"))
     prima = servizi.ricetta.elenco("", None, None, 1)
-    assert (prima.totale, prima.pagine, len(prima.items)) == (12, 2, 9)
-    assert servizi.ricetta.elenco("", None, None, 99).pagina == 2        # pagina 99 -> ultima
+    assert (prima.totale, prima.pagine, len(prima.items)) == (12, 3, 5)      # default: 5 per pagina
+    assert servizi.ricetta.elenco("", None, None, 99).pagina == 3        # pagina 99 -> ultima
     assert servizi.ricetta.elenco("", None, None, -5).pagina == 1
 
 

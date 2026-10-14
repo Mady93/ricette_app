@@ -20,7 +20,7 @@ def _statistica_home() -> Optional[dict]:
     Con una dispensa che combacia con qualche ricetta: quanto ti manca per cucinarle.
     Altrimenti (ospite, dispensa vuota): quante ricette ci sono per difficoltà.
     """
-    if g.get("utente"):
+    if g.get("utente") and ricetta_service.esistono_ricette():
         suggerimenti = dispensa_service.cosa_posso_cucinare(g.utente.id)[:5]
         if suggerimenti:
             voci = tuple((s.titolo, s.percentuale) for s in suggerimenti)
@@ -32,6 +32,9 @@ def _statistica_home() -> Optional[dict]:
                 "link": url_for("dispensa.cosa_cucinare"),
                 "link_testo": "Vedi tutte",
             }
+
+    if not ricetta_service.esistono_ricette():
+        return None
 
     facile, media, difficile = (ricetta_service.elenco("", d, None, 1).totale
                                 for d in ("facile", "media", "difficile"))
@@ -49,7 +52,16 @@ def _statistica_home() -> Optional[dict]:
 @main_bp.route("/")
 def home() -> str:
     """Home: hero, grafico statistico e passi."""
-    return render_template("main/home.html", stat=_statistica_home())
+    ha_ricette = ricetta_service.esistono_ricette()
+    # Controllo sicuro basato sugli ingredienti disponibili nel database
+    ha_ingredienti = len(ricetta_service.ingredienti_disponibili()) > 0
+
+    return render_template(
+        "main/home.html", 
+        stat=_statistica_home(),
+        ha_ricette=ha_ricette,
+        ha_ingredienti=ha_ingredienti
+    )
 
 
 @main_bp.route("/profilo", methods=["GET", "POST"])
@@ -64,9 +76,7 @@ def profilo() -> str:
         dati = {"username": f.get("username", "").strip(), "email": f.get("email", "").strip()}
         try:
             dto = valida(AggiornaProfiloDTO, dati)
-            # Aggiorna il profilo tramite il service
             utente_aggiornato = auth_service.aggiorna_profilo(g.utente.id, dto)
-            # Aggiorna l'utente corrente in g per riflettere subito i cambiamenti
             g.utente = utente_aggiornato
             flash("Profilo aggiornato con successo!", "success")
             return redirect(url_for("main.profilo"))

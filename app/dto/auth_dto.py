@@ -6,6 +6,8 @@ from typing import Optional
 from pydantic import BaseModel, EmailStr, Field, ValidationInfo, field_validator
 
 _USERNAME_RE = re.compile(r"^[A-Za-z0-9_]+$")
+# Regex per la password sicura (min 10 caratteri, maiuscola, minuscola, numero e simbolo)
+_PASSWORD_RE = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._-])[A-Za-z\d@$!%*?&._-]{10,128}$")
 
 
 class RegistrazioneDTO(BaseModel):
@@ -37,8 +39,11 @@ class RegistrazioneDTO(BaseModel):
     @field_validator("password")
     @classmethod
     def _password_robusta(cls, v, info: ValidationInfo):
-        if not (any(c.isalpha() for c in v) and any(c.isdigit() for c in v)):
-            raise ValueError("La password deve contenere almeno una lettera e un numero.")
+        if not _PASSWORD_RE.match(v):
+            raise ValueError(
+                "La password deve essere di almeno 10 caratteri e contenere: "
+                "almeno una maiuscola, una minuscola, un numero e un carattere speciale (@$!%*?&._-)."
+            )
         username = info.data.get("username")
         if username and v.lower() == username.lower():
             raise ValueError("La password non può coincidere con lo username.")
@@ -75,6 +80,10 @@ class UtenteDTO:
     def is_authenticated(self) -> bool:
         return True  # Essendo un DTO di un utente caricato, è sempre autenticato
 
+    @property
+    def is_admin(self) -> bool:
+        return self.ruolo == "admin"
+
     @classmethod
     def from_model(cls, u):
         return cls(
@@ -84,6 +93,7 @@ class UtenteDTO:
             ruolo=u.ruolo, 
             creato_il=u.creato_il
         )
+
 
 class AggiornaProfiloDTO(BaseModel):
     """DTO per la modifica del profilo."""

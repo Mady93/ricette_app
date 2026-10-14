@@ -4,7 +4,9 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
   <h1 class="mb-0">Ricette</h1>
-  {% if utente %}<a class="azione" href="{{ url_for('ricette.nuova') }}">Nuova ricetta {{ icon('arrow', 16) }}</a>{% endif %}
+  {% if current_user.is_authenticated and current_user.ruolo == 'admin' %}
+    <a class="azione" href="{{ url_for('ricette.importa') }}">Importa Ricette CSV {{ icon('arrow', 16) }}</a>
+  {% endif %}
 </div>
 
 {# Form di ricerca principale #}
@@ -35,11 +37,9 @@
   <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-4">
     {% for r in pag.items %}
       <div class="col">
-        {# Aggiunto position-relative per il link esteso della card #}
         <div class="card h-100 position-relative">
           <div class="card-body">
             <h2 class="h5 card-title">
-              {# Usiamo stretched-link così l'intera card è cliccabile e fa diventare il titolo viola al hover #}
               <a href="{{ url_for('ricette.dettaglio', ricetta_id=r.id) }}" class="stretched-link text-decoration-none">
                 {{ r.titolo }}
               </a>
@@ -56,7 +56,7 @@
     {% endfor %}
   </div>
 
-    {# Paginazione stile Angular Material #}
+  {# Paginazione stile Angular Material #}
   <section class="mat-paginator" aria-label="Paginazione ricette">
     <form id="perPageForm"
           method="get"

@@ -18,6 +18,6 @@
     {% if errori.unita %}<div class="invalid-feedback">{{ errori.unita }}</div>{% endif %}
   </div>
   <button type="submit" class="btn btn-primary">Aggiungi</button>
-  <a class="ms-2" href="{{ url_for('ricette.nuova') }}">Torna alla nuova ricetta</a>
+  <a class="ms-2" href="{{ url_for('ricette.elenco') }}">Torna all'elenco ricette</a>
 </form>
 {% endblock %}
